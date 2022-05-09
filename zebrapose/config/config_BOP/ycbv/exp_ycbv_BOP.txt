@@ -1,0 +1,61 @@
+#### training dataset
+##for ycbv, bop_challange = False during the training
+bop_challange = True
+bop_path = /home/ysu/data/data_object_pose/Remote_BOP
+dataset_name = ycbv
+training_data_folder = train_real
+training_data_folder_2 = train_pbr
+val_folder = test
+test_folder = test
+second_dataset_ratio = 0.75
+num_workers = 8
+train_obj_visible_theshold = 0.2
+####
+
+
+#### network settings
+BoundingBox_CropSize_image = 256
+BoundingBox_CropSize_GT = 128
+
+BinaryCode_Loss_Type = BCE
+mask_binary_code_loss = True 
+predict_entire_mask = False
+
+use_histgramm_weighted_binary_loss = True
+
+output_kernel_size = 1
+
+resnet_layer = 34
+concat_encoder_decoder = True
+####
+
+
+#### check points
+load_checkpoint=False
+check_point_path=/home/ysu/data/6dof_pose_experiments/experiments/checkpoints/
+tensorboard_path=/home/ysu/data/6dof_pose_experiments/experiments/tensorboard_logs/runs/
+####
+
+
+#### optimizer
+optimizer_type = Adam
+learning_rate = 0.0002
+batch_size = 32
+total_iteration = 380000
+
+binary_loss_weight = 3
+#### 
+
+
+#### augmentations
+Detection_reaults = detection_results/ycbv/fcos_V57eSE_MSx1333_ColorAugAAEWeaker_8e_ycbv_real_pbr_8e_test_keyframe.json
+
+padding_ratio = 1.5
+resize_method = crop_square_resize  
+
+use_peper_salt= True
+use_motion_blur= True
+
+#binary coding settings
+divide_number_each_itration = 2
+number_of_itration = 16
