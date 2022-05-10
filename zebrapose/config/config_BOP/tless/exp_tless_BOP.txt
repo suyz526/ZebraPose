@@ -50,7 +50,7 @@ binary_loss_weight = 3
 Detection_reaults = detection_results/tless/fcos_V57eSE_MSx1333_ColorAugAAEWeaker_8e_tless_real_pbr.json
 
 padding_ratio = 1.5
-resize_method = crop_resize  
+resize_method = crop_square_resize  
 
 use_peper_salt= True
 use_motion_blur= True

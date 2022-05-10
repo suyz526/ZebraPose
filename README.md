@@ -55,7 +55,7 @@ Adjust the paths in the config files, and train the network with `train.py`, e.g
 
 `python train.py --cfg config/config_BOP/lmo/exp_lmo_BOP.txt --obj_name ape`
 
-The script will save the last 3 checkpoints and the best checkpoint, as well as tensorboard log.
+The script will save the last 3 checkpoints and the best checkpoint, as well as tensorboard log. 
 
 ## Test with trained model
 For most datasets, a specific object occurs only once in a test images. 
@@ -66,7 +66,7 @@ For datasets like tless, the number of a a specific object is unknown in the tes
 
 `python test_vivo.py --cfg config/config_BOP/tless/exp_tless_BOP.txt --ckpt_file path/to/the/best/checkpoint --ignore_bit 0 --obj_name obj01 --eval_output_path path/to/save/the/evaluation/report`
 
-Download our trained model from this [`link`](https://cloud.dfki.de/owncloud/index.php/s/EmQDWgd5ipbdw3E)
+Download our trained model from this [`link`](https://cloud.dfki.de/owncloud/index.php/s/EmQDWgd5ipbdw3E). The ProgressiveX can not set random seed in its python API. The ADD results can be +/- 0.5%.
 
 ## Evaluate for BOP challange 
 Merge the `.csv` files generated in the last step using `tools_for_BOP/merge_csv.py`, e.g.
