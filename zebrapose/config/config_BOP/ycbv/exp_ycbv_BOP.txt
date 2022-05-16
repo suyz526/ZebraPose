@@ -7,7 +7,7 @@ training_data_folder = train_real
 training_data_folder_2 = train_pbr
 val_folder = test
 test_folder = test
-second_dataset_ratio = 0.75
+second_dataset_ratio = 0.875
 num_workers = 8
 train_obj_visible_theshold = 0.2
 ####

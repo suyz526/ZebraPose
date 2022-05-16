@@ -3,8 +3,8 @@
 bop_challange = True
 bop_path = /home/ysu/data/data_object_pose/Remote_BOP/
 dataset_name = lmo
-training_data_folder = train_real
-training_data_folder_2 = train_pbr
+training_data_folder = train_pbr
+training_data_folder_2 = none
 val_folder = test
 test_folder = test
 second_dataset_ratio = 0.75
