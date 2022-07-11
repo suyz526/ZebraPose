@@ -53,6 +53,7 @@ We write a easy renderer ourself because we need to set
 - glfw3
 - assimp (4.1)
 - OpenCV
+- download the source of [`glad`](https://glad.dav1d.de/) (Profile: compatibility) into `Binary_Code_GT_Generator/Render_GT_Color_Mesh_to_GT_Img/render_related_source/glad
 
 
 ### 1. build the C++ executable:
