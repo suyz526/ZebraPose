@@ -1,7 +1,7 @@
 import os
 import sys
 
-sys.path.append("../Tools_for_BOP")
+sys.path.append("../zebrapose/tools_for_BOP")
 import bop_io
 
 
