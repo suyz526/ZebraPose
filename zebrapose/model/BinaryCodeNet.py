@@ -1,7 +1,8 @@
 import torch.nn as nn
 import torch
-from model.aspp import ASPP, ASPP_50, ASPP_non_binary_ablationstudy
+from model.aspp import ASPP, ASPP_50, ASPP_non_binary_ablationstudy, ASPP_Efficientnet, ASPP_Efficientnet_upsampled,ASPP_Efficientnetv2
 from model.resnet import ResNet50_OS8, ResNet34_OS8
+from model.efficientnet import efficientnet_intermediate_out,efficientnet_upsampled
 
 #################### loss ######################
 ################################################
@@ -127,6 +128,7 @@ class BinaryCodeNet_Deeplab(nn.Module):
         divided_number_each_iteration,
         concat=False, 
         output_kernel_size = 1, 
+        efficientnet_key = None, 
     ):
         super(BinaryCodeNet_Deeplab, self).__init__()
         self.concat = concat
@@ -135,7 +137,7 @@ class BinaryCodeNet_Deeplab(nn.Module):
         if divided_number_each_iteration == 2:
             # hard coded 1 for object mask
             # we assumed for binary case, no CE loss will be used. Otherwise it will be binary_code_length*2 + 1
-            self.net = DeepLabV3(num_resnet_layers, binary_code_length + 1, concat=self.concat, output_kernel_size=output_kernel_size)
+            self.net = DeepLabV3(num_resnet_layers, binary_code_length + 1, concat=self.concat, output_kernel_size=output_kernel_size, efficientnet_key=efficientnet_key)
         else:
             self.net = DeepLabV3_non_binary(num_resnet_layers, binary_code_length=binary_code_length, divided_number_each_iteration=divided_number_each_iteration, concat=self.concat, output_kernel_size=output_kernel_size)
 
@@ -144,28 +146,46 @@ class BinaryCodeNet_Deeplab(nn.Module):
 
 
 class DeepLabV3(nn.Module):
-    def __init__(self, num_resnet_layers, num_classes, concat=False, output_kernel_size=1):
+    def __init__(self, num_resnet_layers, num_classes, concat=False, output_kernel_size=1, efficientnet_key=None):
         super(DeepLabV3, self).__init__()
 
         self.num_classes = num_classes
         self.concat = concat
         self.num_resnet_layers = num_resnet_layers
-        if num_resnet_layers == 34:
-            self.resnet = ResNet34_OS8(34, concat) # NOTE! specify the type of ResNet here
-            self.aspp = ASPP(num_classes=self.num_classes, concat=concat, output_kernel_size=output_kernel_size) 
-        elif num_resnet_layers == 50:
-            self.resnet = ResNet50_OS8(50, concat) # NOTE! specify the type of ResNet here
-            self.aspp = ASPP_50(num_classes=self.num_classes, concat=concat, output_kernel_size=output_kernel_size) 
-        
+        self.efficientnet_key = efficientnet_key
+
+        if efficientnet_key == None:
+            if num_resnet_layers == 34:
+                self.resnet = ResNet34_OS8(34, concat) # NOTE! specify the type of ResNet here
+                self.aspp = ASPP(num_classes=self.num_classes, concat=concat, output_kernel_size=output_kernel_size) 
+            elif num_resnet_layers == 50:
+                self.resnet = ResNet50_OS8(50, concat) # NOTE! specify the type of ResNet here
+                self.aspp = ASPP_50(num_classes=self.num_classes, concat=concat, output_kernel_size=output_kernel_size) 
+        else:
+            if self.efficientnet_key == 'b5':
+                self.efficientnet = efficientnet_intermediate_out(version=self.efficientnet_key,concat=concat)
+                self.aspp = ASPP_Efficientnet(num_classes=self.num_classes, concat=concat, output_kernel_size=output_kernel_size)
+            elif self.efficientnet_key == 'b4':
+                self.efficientnet = efficientnet_upsampled(version=self.efficientnet_key,concat=concat)
+                self.aspp = ASPP_Efficientnet_upsampled(num_classes=self.num_classes, concat=concat, output_kernel_size=output_kernel_size) 
+
 
     def forward(self, x):
         # (x has shape (batch_size, 3, h, w))
-        if not self.concat:
-            feature_map = self.resnet(x) # (shape: (batch_size, 512, h/16, w/16)) (assuming self.resnet is ResNet18_OS16 or ResNet34_OS16. If self.resnet is ResNet18_OS8 or ResNet34_OS8, it will be (batch_size, 512, h/8, w/8). If self.resnet is ResNet50-152, it will be (batch_size, 4*512, h/16, w/16))
-            output = self.aspp(feature_map) # (shape: (batch_size, num_classes, h/16, w/16))
+        if self.efficientnet_key == None:
+            if not self.concat:
+                feature_map = self.resnet(x) # (shape: (batch_size, 512, h/16, w/16)) (assuming self.resnet is ResNet18_OS16 or ResNet34_OS16. If self.resnet is ResNet18_OS8 or ResNet34_OS8, it will be (batch_size, 512, h/8, w/8). If self.resnet is ResNet50-152, it will be (batch_size, 4*512, h/16, w/16))
+                output = self.aspp(feature_map) # (shape: (batch_size, num_classes, h/16, w/16))
+            else:
+                x_high_feature, x_128, x_64, x_32, x_16 = self.resnet(x)
+                output = self.aspp(x_high_feature, x_128, x_64, x_32, x_16)
         else:
-            x_high_feature, x_128, x_64, x_32, x_16 = self.resnet(x)
-            output = self.aspp(x_high_feature, x_128, x_64, x_32, x_16)
+            if self.efficientnet_key  == 'b5':
+                l9,l6,l4,l3,l2 = self.efficientnet(x)
+                output = self.aspp(l9,l6,l4,l3,l2)
+            elif self.efficientnet_key == 'b4':
+                l9,l3,l2 = self.efficientnet(x)
+                output = self.aspp(l9,l3,l2)
 
         #output = F.interpolate(output, size=(h, w), mode="bilinear") # (shape: (batch_size, num_classes, h, w))
 
