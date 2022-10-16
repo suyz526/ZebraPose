@@ -205,3 +205,52 @@ void opengl_render::render_3D_GT_Model(const Eigen::Matrix4f &P_Matrix, const in
     }
 }
 
+void opengl_render::get_rendered_surface_depth(const Eigen::Matrix4f &P_Matrix, const int &model_id, const float &near_z, const float &far_z, Eigen::MatrixXf &z_image)
+{
+    glFlush();
+    glfwSwapBuffers(window);
+    glfwPollEvents();  
+    // render 
+    // input
+    processInput(window);
+    // clear
+    glClearDepth(1.0);
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);   
+
+    glMatrixMode(GL_PROJECTION );
+    glShadeModel(GL_FLAT);
+
+    //3D Model
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);  
+    render_3D_GT_Model(P_Matrix, model_id);
+
+    Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> depth_image(IMG_HEIGHT, IMG_WIDTH);
+    z_image.resize(IMG_HEIGHT, IMG_WIDTH);
+
+    //read the depth value
+    glReadPixels(0, 0, IMG_WIDTH, IMG_HEIGHT, GL_DEPTH_COMPONENT, GL_FLOAT, depth_image.data());
+
+    //compute the z value
+    for(int i = 0; i < IMG_HEIGHT; ++i)
+    {
+        for(int j = 0; j < IMG_WIDTH; ++j)
+        {
+            float pixel_depth = depth_image(i,j);
+            if(pixel_depth == 1.f)
+            {
+                z_image(IMG_HEIGHT-i-1,j) = 0.;
+                continue;
+            }
+            float clip_z;
+            clip_z = (pixel_depth - 0.5f) * 2.0f;
+            float world_z = 2*far_z*near_z/((far_z+near_z)-clip_z*(far_z-near_z));
+            z_image(IMG_HEIGHT-i-1,j) = world_z;
+        }
+    }
+
+    glFlush();
+    glfwSwapBuffers(window);
+    glfwPollEvents(); 
+}

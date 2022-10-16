@@ -34,6 +34,9 @@ class opengl_render
     void rendering_GT_once(const Eigen::Matrix4f &P_Matrix, const int &model_id);
     void render_3D_GT_Model(const Eigen::Matrix4f &P_Matrix, const int &model_id);
 
+    //for icp refinement
+    void get_rendered_surface_depth(const Eigen::Matrix4f &P_Matrix, const int &model_id, const float &near_z, const float &far_z, Eigen::MatrixXf &z_image);
+    
     private:
     // settings
     unsigned int IMG_WIDTH;

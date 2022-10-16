@@ -22,6 +22,7 @@ struct module_state {
 
 Camera *Camera_;
 opengl_render *render;
+Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> *z_image_object;
 
 static PyObject *  
 render_init_wrapper (PyObject *self, PyObject *args)
@@ -121,6 +122,10 @@ render_del_wrapper (PyObject *self, PyObject *args)
 {
     delete Camera_;
     delete render;
+    if (z_image_object != nullptr)
+    {   
+        delete z_image_object;
+    }
 
     Py_INCREF(Py_None);
     return Py_None;
@@ -185,6 +190,62 @@ render_save_current_framebuffer_wrapper(PyObject *self, PyObject *args)
 
 }
 
+static PyObject *  
+get_object_surface_depth_wrapper(PyObject *self, PyObject *args)
+{
+    PyArrayObject *in_x;
+    PyArrayObject *in_r;
+    int model_id;
+
+    if (!PyArg_ParseTuple(args, "O!O!i", &PyArray_Type, &in_x, &PyArray_Type, &in_r, &model_id))
+        return NULL;
+
+    Eigen::Vector3f input_x;
+    Eigen::Matrix3f input_r;
+
+    //read data from numpy
+    for(int i = 0; i < 3; ++i)
+    {
+        double x_temp = *(double*)(in_x->data+i*in_x->strides[0]);
+        input_x(i) = (float)x_temp;
+    }
+
+    for(int i = 0; i < 3; ++i)
+    {
+        for(int j = 0; j < 3; ++j)
+        {
+            double r_temp = *(double*)(in_r->data+(i*3+j)*in_r->strides[0]);
+            input_r(i,j) = (float)r_temp;
+        }
+    }
+    
+    Eigen::Matrix4f T_Matrix = Eigen::Matrix4f::Identity();
+    T_Matrix.block<3,3>(0,0) = input_r;  
+    T_Matrix.block<3,1>(0,3) = input_x;
+
+    Eigen::Matrix4f P_Matrix;
+    Camera_->Calcutated_P_Matrix(T_Matrix, P_Matrix);  
+
+    Eigen::MatrixXf z_image_object_temp;
+    render->get_rendered_surface_depth(P_Matrix, model_id, Camera_->get_nearplane(), Camera_->get_farplane(), z_image_object_temp); 
+
+    npy_intp dims[2] = { z_image_object_temp.rows(), z_image_object_temp.cols() };
+    PyObject *py_array;
+
+    //Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> z_image_object_(z_image_object);
+    //z_image_object_ = z_image_object;
+    if (z_image_object != nullptr)
+    {   
+        delete z_image_object;
+    }
+    z_image_object = new Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>(z_image_object_temp);
+    py_array = PyArray_SimpleNewFromData(2, dims, NPY_FLOAT32, z_image_object->data());
+    
+    Py_INCREF(py_array);
+    return py_array;
+
+}
+
 static int Render_traverse(PyObject *m, visitproc visit, void *arg) {
     Py_VISIT(GETSTATE(m)->error);
     return 0;
@@ -208,6 +269,8 @@ static PyMethodDef RenderMethods[] = {
     {"render_GT_visible_side",  render_GT_visible_side_wrapper, METH_VARARGS,
      NULL},
     {"render_save_current_framebuffer",  render_save_current_framebuffer_wrapper, METH_VARARGS,
+     NULL},
+    {"get_object_surface_depth",  get_object_surface_depth_wrapper, METH_VARARGS,
      NULL},
     {NULL, NULL, 0, NULL}        /* Sentinel */
 };
