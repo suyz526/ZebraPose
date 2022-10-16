@@ -120,7 +120,7 @@ private:
             vector(2) = mesh->mVertices[i].z * scale;
             vertex.Position = vector;
             // colors
-            if(mesh->mColors != NULL)
+            if(mesh->mColors[0] != NULL)
             {
                 vector_for_color(0) = mesh->mColors[0][i].r;
                 vector_for_color(1) = mesh->mColors[0][i].g;
