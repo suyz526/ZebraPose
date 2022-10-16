@@ -108,8 +108,90 @@ tudl_obj_name_obj_id = {
 
 tudl_symmetry_obj = [] 
 
+#### hb
+hb_obj_name_obj_id = {
+    'obj01': 1,
+    'obj02': 2,
+    'obj03': 3,
+    'obj04': 4,
+    'obj05': 5,
+    'obj06': 6,
+    'obj07': 7,
+    'obj08': 8,
+    'obj09': 9,
+    'obj10': 10,
+    'obj11': 11,
+    'obj12': 12,
+    'obj13': 13,
+    'obj14': 14,
+    'obj15': 15,
+    'obj16': 16,
+    'obj17': 17,
+    'obj18': 18,
+    'obj19': 19,
+    'obj20': 20,
+    'obj21': 21,
+    'obj22': 22,
+    'obj23': 23,
+    'obj24': 24,
+    'obj25': 25,
+    'obj26': 26,
+    'obj27': 27,
+    'obj28': 28,
+    'obj29': 29,
+    'obj30': 30,
+    'obj31': 31,
+    'obj32': 32,
+    'obj33': 33,
+}
+
+hb_symmetry_obj = ['obj10', 'obj11', 'obj14'] 
+
+#### icbin
+icbin_obj_name_obj_id = {
+    'obj01': 1,
+    'obj02': 2
+}
+
+icbin_symmetry_obj = ['obj01'] 
+
+#### itodd
+itodd_obj_name_obj_id = {
+    'obj01': 1,
+    'obj02': 2,
+    'obj03': 3,
+    'obj04': 4,
+    'obj05': 5,
+    'obj06': 6,
+    'obj07': 7,
+    'obj08': 8,
+    'obj09': 9,
+    'obj10': 10,
+    'obj11': 11,
+    'obj12': 12,
+    'obj13': 13,
+    'obj14': 14,
+    'obj15': 15,
+    'obj16': 16,
+    'obj17': 17,
+    'obj18': 18,
+    'obj19': 19,
+    'obj20': 20,
+    'obj21': 21,
+    'obj22': 22,
+    'obj23': 23,
+    'obj24': 24,
+    'obj25': 25,
+    'obj26': 26,
+    'obj27': 27,
+    'obj28': 28,
+}
+
+itodd_symmetry_obj = ['obj02', 'obj03', 'obj04', 'obj05', 'obj07', 'obj08', 'obj09', 'obj11', 'obj12', 'obj14', 
+                        'obj17', 'obj18', 'obj19', 'obj23', 'obj24', 'obj25', 'obj27', 'obj28'] 
+
 
 def get_obj_info(dataset_name):
-    if dataset_name not in ['lmo', 'ycbv', 'tless', 'tudl']:
+    if dataset_name not in ['lmo', 'ycbv', 'tless', 'tudl', 'hb', 'icbin', 'itodd']:
         raise AssertionError("dataset name unknow")
     return eval("{}_obj_name_obj_id".format(dataset_name)), eval("{}_symmetry_obj".format(dataset_name))
