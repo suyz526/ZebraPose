@@ -241,9 +241,14 @@ class bop_dataset_single_obj_pytorch(Dataset):
         gt = self.gts[index]
         gt_info = self.gt_infos[index]
 
-        R = np.array(gt['cam_R_m2c']).reshape(3,3) 
-        t = np.array(gt['cam_t_m2c']) 
-        Bbox = np.array(gt_info['bbox_visib'])
+        if gt == None:  
+            R = np.array(range(9)).reshape(3,3) 
+            t = np.array(range(3)) 
+            Bbox = np.array([1,1,1,1])
+        else:
+            R = np.array(gt['cam_R_m2c']).reshape(3,3) 
+            t = np.array(gt['cam_t_m2c']) 
+            Bbox = np.array(gt_info['bbox_visib'])
 
         cam_param = self.cam_params[index]['cam_K'].reshape((3,3))
 
