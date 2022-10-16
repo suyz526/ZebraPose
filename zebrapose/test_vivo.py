@@ -221,14 +221,17 @@ if __name__ == "__main__":
     parser.add_argument('--ckpt_file', type=str)
     parser.add_argument('--ignore_bit', type=str)  # use the full 16 bit binary code, or ignore last n-bits
     parser.add_argument('--eval_output_path', type=str)
+    parser.add_argument('--use_icp', type=str, choices=('True','False'), default='False') # config file
     args = parser.parse_args()
     config_file = args.cfg
     checkpoint_file = args.ckpt_file
     eval_output_path = args.eval_output_path
     obj_name = args.obj_name
+
     configs = parse_cfg(config_file)
 
     configs['obj_name'] = obj_name
+    configs['use_icp'] = (args.use_icp == 'True')
 
     if configs['Detection_reaults'] != 'none':
         Detection_reaults = configs['Detection_reaults']

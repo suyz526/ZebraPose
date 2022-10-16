@@ -395,6 +395,7 @@ if __name__ == "__main__":
     parser.add_argument('--ckpt_file', type=str)
     parser.add_argument('--ignore_bit', type=str)
     parser.add_argument('--eval_output_path', type=str)
+    parser.add_argument('--use_icp', type=str, choices=('True','False'), default='False') # config file
     args = parser.parse_args()
     config_file = args.cfg
     checkpoint_file = args.ckpt_file
@@ -402,7 +403,9 @@ if __name__ == "__main__":
     obj_name = args.obj_name
     configs = parse_cfg(config_file)
 
+    configs['use_icp'] = (args.use_icp == 'True')
     configs['obj_name'] = obj_name
+
 
     if configs['Detection_reaults'] != 'none':
         Detection_reaults = configs['Detection_reaults']
