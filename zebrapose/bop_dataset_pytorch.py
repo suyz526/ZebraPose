@@ -193,7 +193,7 @@ def get_final_Bbox(Bbox, resize_method, max_x, max_y):
 class bop_dataset_single_obj_pytorch(Dataset):
     def __init__(self, dataset_dir, data_folder, rgb_files, mask_files, mask_visib_files, gts, gt_infos, cam_params, 
                         is_train, crop_size_img, crop_size_gt, GT_code_infos, padding_ratio=1.5, resize_method="crop_resize", 
-                        use_peper_salt=False, use_motion_blur=False, Detect_Bbox=None):
+                        use_peper_salt=False, use_motion_blur=False, Detect_Bbox=None, sym_aware_training=False):
         # gts: rotation and translation
         # gt_infos: bounding box
         self.rgb_files = rgb_files
@@ -213,6 +213,7 @@ class bop_dataset_single_obj_pytorch(Dataset):
         self.padding_ratio = padding_ratio
         self.use_peper_salt = use_peper_salt
         self.use_motion_blur = use_motion_blur
+        self.sym_aware_training = sym_aware_training
 
         self.nSamples = len(self.rgb_files)
         
@@ -234,7 +235,10 @@ class bop_dataset_single_obj_pytorch(Dataset):
         scene_id = rgb_fn[-3]
         GT_image_name = mask_visib_fns[0].split("/")[-1]
         
-        GT_img_dir = os.path.join(self.dataset_dir, self.data_folder + '_GT', scene_id)
+        if self.sym_aware_training:
+            GT_img_dir = os.path.join(self.dataset_dir, self.data_folder + '_GT_v2', scene_id)
+        else:
+            GT_img_dir = os.path.join(self.dataset_dir, self.data_folder + '_GT', scene_id)
         GT_img_fn = os.path.join(GT_img_dir, GT_image_name)        
         GT_img = cv2.imread(GT_img_fn)
 

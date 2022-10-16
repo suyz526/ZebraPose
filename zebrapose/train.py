@@ -77,6 +77,8 @@ def main(configs):
     divide_number_each_itration = configs['divide_number_each_itration']
     number_of_itration = configs['number_of_itration']
 
+    sym_aware_training=configs['sym_aware_training']
+
     # get dataset informations
     dataset_dir,source_dir,model_plys,model_info,model_ids,rgb_files,depth_files,mask_files,mask_visib_files,gts,gt_infos,cam_param_global, cam_params = bop_io.get_dataset(bop_path,dataset_name, train=True, data_folder=training_data_folder, data_per_obj=True, incl_param=True, train_obj_visible_theshold=train_obj_visible_theshold)
     obj_name_obj_id, symmetry_obj = get_obj_info(dataset_name)
@@ -114,7 +116,7 @@ def main(configs):
                                                     dataset_dir, training_data_folder, rgb_files[obj_id], mask_files[obj_id], mask_visib_files[obj_id], 
                                                     gts[obj_id], gt_infos[obj_id], cam_params[obj_id], True, BoundingBox_CropSize_image, 
                                                     BoundingBox_CropSize_GT, GT_code_infos,  padding_ratio=padding_ratio, resize_method=resize_method, 
-                                                    use_peper_salt=use_peper_salt, use_motion_blur=use_motion_blur
+                                                    use_peper_salt=use_peper_salt, use_motion_blur=use_motion_blur, sym_aware_training=sym_aware_training
                                                     )
     print("training_data_folder image example:", rgb_files[obj_id][0], flush=True)
 
@@ -125,7 +127,7 @@ def main(configs):
                                                         gts_pbr[obj_id], gt_infos_pbr[obj_id], camera_params_pbr[obj_id], True, 
                                                         BoundingBox_CropSize_image, BoundingBox_CropSize_GT, GT_code_infos, 
                                                         padding_ratio=padding_ratio, resize_method=resize_method,
-                                                        use_peper_salt=use_peper_salt, use_motion_blur=use_motion_blur
+                                                        use_peper_salt=use_peper_salt, use_motion_blur=use_motion_blur, sym_aware_training=sym_aware_training
                                                     )
         print("training_data_folder_2 image example:", rgb_files_pbr[obj_id][0], flush=True)
         train_loader_2 = torch.utils.data.DataLoader(train_dataset_2, batch_size=batch_size_2_dataset, shuffle=True, num_workers=num_workers, drop_last=True)                     
@@ -166,7 +168,7 @@ def main(configs):
                                             test_gts[obj_id], test_gt_infos[obj_id], camera_params_test[obj_id], False, 
                                             BoundingBox_CropSize_image, BoundingBox_CropSize_GT, GT_code_infos, 
                                             padding_ratio=padding_ratio, resize_method=resize_method, Detect_Bbox=Det_Bbox,
-                                            use_peper_salt=use_peper_salt, use_motion_blur=use_motion_blur
+                                            use_peper_salt=use_peper_salt, use_motion_blur=use_motion_blur, sym_aware_training=sym_aware_training
                                         )
     
     print("number of test images: ", len(test_dataset), flush=True)
@@ -345,10 +347,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='BinaryCodeNet')
     parser.add_argument('--cfg', type=str) # config file
     parser.add_argument('--obj_name', type=str) # config file
+    parser.add_argument('--sym_aware_training', type=str, choices=('True','False'), default='False') # config file
     args = parser.parse_args()
     config_file = args.cfg
     configs = parse_cfg(config_file)
     configs['obj_name'] = args.obj_name
+    configs['sym_aware_training'] = (args.sym_aware_training == 'True')
+    
 
     check_point_path = configs['check_point_path']
     tensorboard_path= configs['tensorboard_path']
@@ -357,8 +362,8 @@ if __name__ == "__main__":
     config_file_name = os.path.splitext(config_file_name)[0]
     check_point_path = check_point_path + config_file_name
     tensorboard_path = tensorboard_path + config_file_name
-    configs['check_point_path'] = check_point_path
-    configs['tensorboard_path'] = tensorboard_path
+    configs['check_point_path'] = check_point_path + args.obj_name + '/'
+    configs['tensorboard_path'] = tensorboard_path + args.obj_name + '/'
 
     configs['config_file_name'] = config_file_name
 
