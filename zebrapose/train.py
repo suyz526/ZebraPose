@@ -55,6 +55,8 @@ def main(configs):
     resnet_layer = configs['resnet_layer']                              # usually resnet 34
     concat=configs['concat_encoder_decoder']  
     predict_entire_mask=configs['predict_entire_mask']                  # if predict the entire object part rather than the visible one
+    if 'efficientnet_key' in configs.keys():
+        efficientnet_key = configs['efficientnet_key']
     #### check points
     load_checkpoint = configs['load_checkpoint']
     tensorboard_path = configs['tensorboard_path']
@@ -180,7 +182,8 @@ def main(configs):
                 concat=concat, 
                 binary_code_length=binary_code_length, 
                 divided_number_each_iteration = divide_number_each_itration, 
-                output_kernel_size = output_kernel_size
+                output_kernel_size = output_kernel_size,
+                efficientnet_key = efficientnet_key
             )
     maskLoss = MaskLoss()
     binarycode_loss = BinaryCodeLoss(BinaryCode_Loss_Type, mask_binary_code_loss, divide_number_each_itration, use_histgramm_weighted_binary_loss=use_histgramm_weighted_binary_loss)

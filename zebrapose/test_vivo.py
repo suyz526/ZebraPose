@@ -50,7 +50,9 @@ def main(configs):
     BinaryCode_Loss_Type = configs['BinaryCode_Loss_Type']              # now only support "L1" or "BCE"
     output_kernel_size = configs['output_kernel_size']                  # last layer kernel size
     resnet_layer = configs['resnet_layer']                              # usually resnet 34
-    concat=configs['concat_encoder_decoder']                   
+    concat=configs['concat_encoder_decoder']      
+    if 'efficientnet_key' in configs.keys():
+        efficientnet_key = configs['efficientnet_key']             
     
     resize_method = configs['resize_method']
     Detection_reaults=configs['Detection_reaults']                       # for the test, the detected bounding box provided by GDR Net
@@ -97,7 +99,8 @@ def main(configs):
                 concat=concat, 
                 binary_code_length=binary_code_length, 
                 divided_number_each_iteration = divide_number_each_itration, 
-                output_kernel_size = output_kernel_size
+                output_kernel_size = output_kernel_size,
+                efficientnet_key = efficientnet_key
             )
 
     if torch.cuda.is_available():
