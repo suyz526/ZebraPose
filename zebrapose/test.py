@@ -171,6 +171,10 @@ def main(configs):
         print("use BOP test images")
         dataset_dir_test,_,_,_,_,test_rgb_files,test_depth_files,test_mask_files,test_mask_visib_files,test_gts,test_gt_infos,_, camera_params_test = bop_io.get_bop_challange_test_data(bop_path, dataset_name, target_obj_id=obj_id+1, data_folder=test_folder)
 
+    has_gt = True
+    if test_gts[obj_id][0] == None:
+        has_gt = False
+
     if Detection_reaults != 'none':
         Det_Bbox = get_detection_results(Detection_reaults, test_rgb_files[obj_id], obj_id+1, 0)
         scores = get_detection_scores(Detection_reaults, test_rgb_files[obj_id], obj_id+1, 0)
@@ -295,7 +299,7 @@ def main(configs):
                 estimated_Ts.append(np.zeros((3,1)))
 
             adx_error = 10000
-            if success:
+            if success and has_gt:
                 adx_error = Calculate_Pose_Error_Main(r_GT, t_GT, R_predict, t_predict, vertices)
                 if np.isnan(adx_error):
                     adx_error = 10000
@@ -313,7 +317,7 @@ def main(configs):
            
             if calc_add_and_adi:
                 ady_error = 10000
-                if success:
+                if success and has_gt:
                     ady_error = Calculate_Pose_Error_Supp(r_GT, t_GT, R_predict, t_predict, vertices)
                     if np.isnan(ady_error):
                         ady_error = 10000
@@ -328,7 +332,8 @@ def main(configs):
                         sum_correct = sum_correct + 1
                 AUC_ADY_error[batch_idx] = sum_correct/10
              
-    #scores = [1 for x in range(len(estimated_Rs))]
+    if Det_Bbox == None:         
+        scores = [1 for x in range(len(estimated_Rs))]
     cvs_path = os.path.join(eval_output_path, 'pose_result_bop/')
     if not os.path.exists(cvs_path):
         os.makedirs(cvs_path)
@@ -353,32 +358,33 @@ def main(configs):
         print('AUC_posecnn_{}/{}'.format(supp_metric_name,supp_metric_name), AUC_ADY_error_posecnn)
 
     ####save results to file
-    path = os.path.join(eval_output_path, "ADD_result/")
-    if not os.path.exists(path):
-        os.makedirs(path)
-    path = path + "{}_{}".format(dataset_name, obj_name) + ".txt" 
-    #path = path + dataset_name + obj_name  + "ignorebit_" + str(configs['ignore_bit']) + ".txt"
-    #path = path + dataset_name + obj_name + "radix" + "_" + str(divide_number_each_itration)+"_"+str(number_of_itration) + ".txt"
-    print('save ADD results to', path)
-    print(path)
-    f = open(path, "w")
-    f.write('{}/{} '.format(main_metric_name,main_metric_name))
-    f.write(str(ADX_passed.item()))
-    f.write('\n')
-    f.write('AUC_{}/{} '.format(main_metric_name,main_metric_name))
-    f.write(str(AUC_ADX_error.item()))
-    f.write('\n')
-    f.write('AUC_posecnn_{}/{} '.format(main_metric_name,main_metric_name))
-    f.write(str(AUC_ADX_error_posecnn.item()))
-    f.write('\n')
-    f.write('AUC_{}/{} '.format(supp_metric_name,supp_metric_name))
-    f.write(str(AUC_ADY_error.item()))
-    f.write('\n')
-    f.write('AUC_posecnn_{}/{} '.format(main_metric_name,main_metric_name))
-    f.write(str(AUC_ADY_error_posecnn.item()))
-    f.write('\n')
-    f.close()
-    ####
+    if has_gt:
+        path = os.path.join(eval_output_path, "ADD_result/")
+        if not os.path.exists(path):
+            os.makedirs(path)
+        path = path + "{}_{}".format(dataset_name, obj_name) + ".txt" 
+        #path = path + dataset_name + obj_name  + "ignorebit_" + str(configs['ignore_bit']) + ".txt"
+        #path = path + dataset_name + obj_name + "radix" + "_" + str(divide_number_each_itration)+"_"+str(number_of_itration) + ".txt"
+        print('save ADD results to', path)
+        print(path)
+        f = open(path, "w")
+        f.write('{}/{} '.format(main_metric_name,main_metric_name))
+        f.write(str(ADX_passed.item()))
+        f.write('\n')
+        f.write('AUC_{}/{} '.format(main_metric_name,main_metric_name))
+        f.write(str(AUC_ADX_error.item()))
+        f.write('\n')
+        f.write('AUC_posecnn_{}/{} '.format(main_metric_name,main_metric_name))
+        f.write(str(AUC_ADX_error_posecnn.item()))
+        f.write('\n')
+        f.write('AUC_{}/{} '.format(supp_metric_name,supp_metric_name))
+        f.write(str(AUC_ADY_error.item()))
+        f.write('\n')
+        f.write('AUC_posecnn_{}/{} '.format(main_metric_name,main_metric_name))
+        f.write(str(AUC_ADY_error_posecnn.item()))
+        f.write('\n')
+        f.close()
+        ####
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='BinaryCodeNet')
