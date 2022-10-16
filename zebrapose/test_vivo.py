@@ -62,9 +62,6 @@ def main(configs):
     divide_number_each_itration = configs['divide_number_each_itration']
     number_of_itration = configs['number_of_itration']
 
-    if configs['use_icp']:
-        from icp_module.ICP_Cosypose import ICPRefiner, read_depth
-
     torch.manual_seed(0)     
     np.random.seed(0)      
 
@@ -124,12 +121,17 @@ def main(configs):
 
     if configs['use_icp']:
         #init the ICP Refiner
+        from icp_module.ICP_Cosypose import ICPRefiner, read_depth
         test_img_example = cv2.imread(test_rgb_files[obj_id][0])
         print('example:', test_rgb_files[obj_id][0])
         icp_refiner = ICPRefiner(mesh_path, test_img_example.shape[1], test_img_example.shape[0], num_iters=100)
     
     test_rgb_files_no_duplicate = list(dict.fromkeys(test_rgb_files[obj_id]))
 
+    if configs['detector'] == 'FCOS':
+        from get_detection_results import get_detection_results_vivo
+    elif configs['detector'] == 'MASKRCNN':
+        from get_mask_rcnn_results import get_detection_results_vivo
     Bboxes = get_detection_results_vivo(Detection_reaults, test_rgb_files_no_duplicate, obj_id+1, 0)
 
     ##get camera parameters

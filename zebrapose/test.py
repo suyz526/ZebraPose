@@ -1,3 +1,4 @@
+from distutils.command.config import config
 import os
 import sys
 
@@ -24,15 +25,13 @@ from model.BinaryCodeNet import BinaryCodeNet_Deeplab
 
 from metric import Calculate_ADD_Error_BOP, Calculate_ADI_Error_BOP
 
-from get_detection_results import get_detection_results, ycbv_select_keyframe, get_detection_scores
+from get_detection_results import ycbv_select_keyframe
 from common_ops import from_output_to_class_mask, from_output_to_class_binary_code, compute_original_mask
 from tools_for_BOP.common_dataset_info import get_obj_info
 
 from binary_code_helper.generate_new_dict import generate_new_corres_dict
 
 from tools_for_BOP import write_to_cvs 
-
-from icp_module.ICP_Cosypose import ICPRefiner, read_depth
 
 def VOCap(rec, prec):
     idx = np.where(rec != np.inf)
@@ -104,8 +103,6 @@ def main(configs):
     divide_number_each_itration = configs['divide_number_each_itration']
     number_of_itration = configs['number_of_itration']
 
-    if configs['use_icp']:
-        from icp_module.ICP_Cosypose import ICPRefiner, read_depth
 
 
     torch.manual_seed(0)      # the both are only good for ablation study
@@ -176,6 +173,10 @@ def main(configs):
         has_gt = False
 
     if Detection_reaults != 'none':
+        if configs['detector']=='FCOS':
+            from get_detection_results import get_detection_results, get_detection_scores
+        elif configs['detector']=='MASKRCNN':
+            from get_mask_rcnn_results import get_detection_results, get_detection_scores
         Det_Bbox = get_detection_results(Detection_reaults, test_rgb_files[obj_id], obj_id+1, 0)
         scores = get_detection_scores(Detection_reaults, test_rgb_files[obj_id], obj_id+1, 0)
     else:
@@ -241,6 +242,7 @@ def main(configs):
 
     if configs['use_icp']:
         #init the ICP Refiner
+        from icp_module.ICP_Cosypose import ICPRefiner, read_depth
         test_img = cv2.imread(test_rgb_files[obj_id][0])
         icp_refiner = ICPRefiner(mesh_path, test_img.shape[1], test_img.shape[0], num_iters=100)
 
