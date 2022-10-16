@@ -12,8 +12,8 @@ The implementation of the paper 'ZebraPose: Coarse to Fine Surface Encoding for 
 
 ### Main Dependencies:
 - [`bop_toolkit`](https://github.com/thodan/bop_toolkit)
-- Pytorch 1.9
-- torchvision 0.10.0
+- Pytorch 1.10
+- torchvision 0.11.0
 - opencv-python
 - [`Progressive-X`](https://github.com/danini/progressive-x)
 
@@ -45,7 +45,7 @@ Download with `git clone --recurse-submodules` so that `bop_toolkit` will also b
         └── tless
     ```
 
-4. Download the 3 [`pretrained resnet`](https://cloud.dfki.de/owncloud/index.php/s/zT7z7c3e666mJTW), save them under `zebrapose/pretrained_backbone/resnet`. 
+4. Download the 3 [`pretrained resnet`](https://cloud.dfki.de/owncloud/index.php/s/zT7z7c3e666mJTW), save them under `zebrapose/pretrained_backbone/resnet`, and download `pretrained efficientnet` from "https://download.pytorch.org/models/efficientnet_b4_rwightman-7eb33cd5.pth", save it under `zebrapose/pretrained_backbone/efficientnet`
 
 5. (Optional) Instead of download the ground truth, you can also generate them from scratch, details in [`Generate_GT.md`](Binary_Code_GT_Generator/Generate_GT.md). 
 
@@ -55,16 +55,20 @@ Adjust the paths in the config files, and train the network with `train.py`, e.g
 
 `python train.py --cfg config/config_BOP/lmo/exp_lmo_BOP.txt --obj_name ape`
 
-The script will save the last 3 checkpoints and the best checkpoint, as well as tensorboard log. 
+The script will save the last 3 checkpoints and the best checkpoint, as well as tensorboard log. To enable sym. aware training, with `--sym_aware_training True`
 
 ## Test with trained model
 For most datasets, a specific object occurs only once in a test images. 
 
 `python test.py --cfg config/config_BOP/lmo/exp_lmo_BOP.txt --obj_name ape --ckpt_file path/to/the/best/checkpoint --ignore_bit 0 --eval_output_path path/to/save/the/evaluation/report`
 
+To use ICP for refinement, use `--use_icp True`
+
 For datasets like tless, the number of a a specific object is unknown in the test stage.
 
 `python test_vivo.py --cfg config/config_BOP/tless/exp_tless_BOP.txt --ckpt_file path/to/the/best/checkpoint --ignore_bit 0 --obj_name obj01 --eval_output_path path/to/save/the/evaluation/report`
+
+To use ICP for refinement, use `--use_icp True`
 
 Download our trained model from this [`link`](https://cloud.dfki.de/owncloud/index.php/s/EmQDWgd5ipbdw3E). The ProgressiveX can not set random seed in its python API. The ADD results can be +/- 0.5%.
 
