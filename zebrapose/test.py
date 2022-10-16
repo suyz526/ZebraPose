@@ -14,6 +14,7 @@ from bop_dataset_pytorch import bop_dataset_single_obj_pytorch
 
 import torch
 import numpy as np
+import cv2
 
 from binary_code_helper.CNN_output_to_pose import load_dict_class_id_3D_points, CNN_outputs_to_object_pose
 sys.path.append("../bop_toolkit")
@@ -24,12 +25,14 @@ from model.BinaryCodeNet import BinaryCodeNet_Deeplab
 from metric import Calculate_ADD_Error_BOP, Calculate_ADI_Error_BOP
 
 from get_detection_results import get_detection_results, ycbv_select_keyframe, get_detection_scores
-from common_ops import from_output_to_class_mask, from_output_to_class_binary_code
+from common_ops import from_output_to_class_mask, from_output_to_class_binary_code, compute_original_mask
 from tools_for_BOP.common_dataset_info import get_obj_info
 
 from binary_code_helper.generate_new_dict import generate_new_corres_dict
 
 from tools_for_BOP import write_to_cvs 
+
+from icp_module.ICP_Cosypose import ICPRefiner, read_depth
 
 def VOCap(rec, prec):
     idx = np.where(rec != np.inf)
@@ -101,6 +104,10 @@ def main(configs):
     divide_number_each_itration = configs['divide_number_each_itration']
     number_of_itration = configs['number_of_itration']
 
+    if configs['use_icp']:
+        from icp_module.ICP_Cosypose import ICPRefiner, read_depth
+
+
     torch.manual_seed(0)      # the both are only good for ablation study
     np.random.seed(0)         # if can be removed in the final experiments
 
@@ -142,7 +149,7 @@ def main(configs):
 
     # define test data loader
     if not bop_challange:
-        dataset_dir_test,_,_,_,_,test_rgb_files,_,test_mask_files,test_mask_visib_files,test_gts,test_gt_infos,_, camera_params_test = bop_io.get_dataset(bop_path, dataset_name,train=False, data_folder=test_folder, data_per_obj=True, incl_param=True, train_obj_visible_theshold=train_obj_visible_theshold)
+        dataset_dir_test,_,_,_,_,test_rgb_files,test_depth_files,test_mask_files,test_mask_visib_files,test_gts,test_gt_infos,_, camera_params_test = bop_io.get_dataset(bop_path, dataset_name,train=False, data_folder=test_folder, data_per_obj=True, incl_param=True, train_obj_visible_theshold=train_obj_visible_theshold)
         if dataset_name == 'ycbv':
             print("select key frames from ycbv test images")
             key_frame_index = ycbv_select_keyframe(Detection_reaults, test_rgb_files[obj_id])
@@ -152,15 +159,17 @@ def main(configs):
             test_gts_keyframe = [test_gts[obj_id][i] for i in key_frame_index]
             test_gt_infos_keyframe = [test_gt_infos[obj_id][i] for i in key_frame_index]
             camera_params_test_keyframe = [camera_params_test[obj_id][i] for i in key_frame_index]
+            test_depth_files_keyframe = [test_depth_files[obj_id][i] for i in key_frame_index]
             test_rgb_files[obj_id] = test_rgb_files_keyframe
             test_mask_files[obj_id] = test_mask_files_keyframe
             test_mask_visib_files[obj_id] = test_mask_visib_files_keyframe
             test_gts[obj_id] = test_gts_keyframe
             test_gt_infos[obj_id] = test_gt_infos_keyframe
             camera_params_test[obj_id] = camera_params_test_keyframe
+            test_depth_files[obj_id] = test_depth_files_keyframe
     else:
         print("use BOP test images")
-        dataset_dir_test,_,_,_,_,test_rgb_files,_,test_mask_files,test_mask_visib_files,test_gts,test_gt_infos,_, camera_params_test = bop_io.get_bop_challange_test_data(bop_path, dataset_name, target_obj_id=obj_id+1, data_folder=test_folder)
+        dataset_dir_test,_,_,_,_,test_rgb_files,test_depth_files,test_mask_files,test_mask_visib_files,test_gts,test_gt_infos,_, camera_params_test = bop_io.get_bop_challange_test_data(bop_path, dataset_name, target_obj_id=obj_id+1, data_folder=test_folder)
 
     if Detection_reaults != 'none':
         Det_Bbox = get_detection_results(Detection_reaults, test_rgb_files[obj_id], obj_id+1, 0)
@@ -226,6 +235,11 @@ def main(configs):
         img_ids.append(img_id)
         scene_ids.append(scene_id)
 
+    if configs['use_icp']:
+        #init the ICP Refiner
+        test_img = cv2.imread(test_rgb_files[obj_id][0])
+        icp_refiner = ICPRefiner(mesh_path, test_img.shape[1], test_img.shape[0], num_iters=100)
+
     for batch_idx, (data, entire_masks, masks, Rs, ts, Bboxes, class_code_images, cam_Ks) in enumerate(tqdm(test_loader)):
         if torch.cuda.is_available():
             data=data.cuda()
@@ -260,6 +274,16 @@ def main(configs):
                                                                             intrinsic_matrix=cam_K)
         
             if success:     
+                # add icp refinement and replace R_predict, t_predict
+                depth_image = read_depth(test_depth_files[obj_id][batch_idx])
+                if dataset_name == 'ycbv' or dataset_name == 'tless':
+                    depth_image = depth_image * 0.1
+                full_mask = compute_original_mask(Bbox, test_img.shape[0], test_img.shape[1], pred_masks[counter])
+                R_refined, t_refined = icp_refiner.refine_poses(t_predict*0.1, R_predict, full_mask, depth_image, cam_K.cpu().detach().numpy())
+                R_predict = R_refined
+                t_predict = t_refined*10.
+                t_predict = t_predict.reshape((3,1))
+
                 estimated_Rs.append(R_predict)
                 estimated_Ts.append(t_predict)
             else:

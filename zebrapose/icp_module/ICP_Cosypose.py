@@ -14,13 +14,12 @@ def read_depth(path):
     return depth
 
 class ICPRefiner:
-    def __init__(self, obj_mesh, im_width, im_height, icp_type,  num_iters = 100):
+    def __init__(self, obj_mesh, im_width, im_height,  num_iters = 100):
         self.render = ICP_Render(obj_mesh, im_width, im_height)
         self.im_width = im_width
         self.im_height = im_height
         self.num_iters = num_iters
-        self.icp_type = icp_type
-
+        
     def refine_poses(self, t_est, R_est, mask, depth, cam_K):
         t_est = t_est.flatten()
         object_depth_est = self.render.get_object_depth(t_est, R_est.flatten(), cam_K)

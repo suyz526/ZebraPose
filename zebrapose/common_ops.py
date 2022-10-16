@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import cv2
 
 
 def from_output_to_class_mask(pred_mask_prob, thershold=0.5):
@@ -31,6 +32,27 @@ def from_output_to_class_binary_code(pred_code_prob, BinaryCode_Loss_Type, thers
 
     return pred_code
 
+def compute_original_mask(Bbox, im_h, im_w, mask):
+    if Bbox[0] < 0:
+        x_offset = -1 * Bbox[0]
+    else:
+        x_offset = 0
+
+    if Bbox[1] < 0:
+        y_offset = -1 * Bbox[1]
+    else:
+        y_offset = 0
+    
+    resize_shape = max(Bbox[2], Bbox[3])
+    full_mask_img = np.zeros((im_h, im_w), dtype=np.uint8)
+    max_x = min(im_w,Bbox[0]+resize_shape)
+    max_y = min(im_h,Bbox[1]+resize_shape)
+    resize_x = min(im_w - Bbox[0],resize_shape)
+    resize_y = min(im_h - Bbox[1],resize_shape)
+    
+    resized_mask = cv2.resize(mask, (resize_shape,resize_shape), interpolation=cv2.INTER_NEAREST)
+    full_mask_img[Bbox[1]+y_offset:max_y,Bbox[0]+x_offset:max_x] = resized_mask[0+y_offset:resize_y,0+x_offset:resize_x]
+    return full_mask_img
 
 def get_batch_size(second_dataset_ratio, batch_size):
     batch_size_2_dataset = int(batch_size * second_dataset_ratio) 
