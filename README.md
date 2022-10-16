@@ -41,7 +41,10 @@ Download with `git clone --recurse-submodules` so that `bop_toolkit` will also b
         │   ├── models_GT_color   #(from last step)
         │   ├── train_pbr_GT      #(from last step)
         │   ├── train_real_GT     #(from last step)
-        │   └── test_GT           #(from last step)
+        │   ├── test_GT           #(from last step)
+        │   ├── train_pbr_GT_v2   #(from last step, for symmetry aware training)
+        │   ├── train_real_GT_v2  #(from last step, for symmetry aware training)
+        │   └── test_GT_v2        #(from last step, for symmetry aware training)
         └── tless
     ```
 

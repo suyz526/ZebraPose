@@ -108,6 +108,8 @@ All the preparations are done, this is the only thing that we need for the train
 
 use `generate_training_labels_for_BOP.py`, e.g. `python3 generate_training_labels_for_BOP.py --bop_path /home/ysu/data/data_object_pose/BOP_dataset/ --dataset_name lmo --force_rewrite True --is_training_data True --data_folder train_real --start_obj_id 0 --end_obj_id 3`
 
+To be able to use symmetry aware training, use use `generate_training_labels_for_BOP_v2.py` to generate the required ground truth.
+
 The args:
 - `bop_path`: bop root path
 - `dataset_name`: like lm, lmo...
