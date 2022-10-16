@@ -81,8 +81,13 @@ def main(configs):
     vertices = inout.load_ply(mesh_path)["pts"]
 
     # define test data loader
-    dataset_dir_test,_,_,_,_,test_rgb_files,_,test_mask_files,test_mask_visib_files,test_gts,test_gt_infos,_, camera_params_test = bop_io.get_dataset(bop_path, dataset_name, train=False, data_folder=test_folder, data_per_obj=True, incl_param=True, train_obj_visible_theshold=train_obj_visible_theshold)
-      
+    if not bop_challange:
+        dataset_dir_test, bop_test_folder,_,_,_,test_rgb_files,_,test_mask_files,test_mask_visib_files,test_gts,test_gt_infos,_, camera_params_test = bop_io.get_dataset(bop_path, dataset_name, train=False, data_folder=test_folder, data_per_obj=True, incl_param=True, train_obj_visible_theshold=train_obj_visible_theshold)
+    else:
+        print("use BOP test images")
+        dataset_dir_test, bop_test_folder,_,_,_,test_rgb_files,_,test_mask_files,test_mask_visib_files,test_gts,test_gt_infos,_, camera_params_test = bop_io.get_bop_challange_test_data(bop_path, dataset_name, target_obj_id=obj_id+1, data_folder=test_folder)
+
+
     binary_code_length = number_of_itration
     print("predicted binary_code_length", binary_code_length)
     configs['binary_code_length'] = binary_code_length
@@ -113,6 +118,13 @@ def main(configs):
 
     Bboxes = get_detection_results_vivo(Detection_reaults, test_rgb_files_no_duplicate, obj_id+1, 0)
 
+    ##get camera parameters
+    camera_params_dict = dict()
+    for scene_id in os.listdir(bop_test_folder):
+        current_dir = bop_test_folder+"/"+scene_id
+        scene_params = inout.load_scene_camera(os.path.join(current_dir,"scene_camera.json"))     
+        camera_params_dict[scene_id] = scene_params
+
     composed_transforms_img = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
@@ -125,8 +137,9 @@ def main(configs):
             img_id = rgb_fn_splitted[-1].split(".")[0]
             rgb_fname = rgb_fn
            
-            Cam_K = camera_params_test[obj_id][0]['cam_K'].reshape((3,3))
-            
+            #Cam_K = camera_params_test[obj_id][0]['cam_K'].reshape((3,3))
+            Cam_K = camera_params_dict[scene_id][int(img_id)]['cam_K'].reshape((3,3))
+                        
             Bbox = Detected_Bbox['bbox_est']
             score = Detected_Bbox['score']
             rgb_img = cv2.imread(rgb_fname)
