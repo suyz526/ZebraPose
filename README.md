@@ -23,7 +23,7 @@ Download with `git clone --recurse-submodules` so that `bop_toolkit` will also b
 ### Training data preparation
 1. Download the dataset from [`BOP benchmark`](https://bop.felk.cvut.cz/datasets/)
 
-2. Download required ground truth folders of zebrapose from [`owncloud`](https://cloud.dfki.de/owncloud/index.php/s/zT7z7c3e666mJTW). The folders are `models_GT_color`, `XX_GT` (e.g. `train_real_GT` and `test_GT`) and `models` (`models` is optional, only if you want to generate GT from scratch).
+2. Download required ground truth folders of zebrapose from [`owncloud`](https://huggingface.co/datasets/dfki-av/ZebraPoseGT). The folders are `models_GT_color`, `XX_GT` (e.g. `train_real_GT` and `test_GT`) and `models` (`models` is optional, only if you want to generate GT from scratch).
 
 3. The expected data structure: 
     ```
@@ -48,7 +48,7 @@ Download with `git clone --recurse-submodules` so that `bop_toolkit` will also b
         └── tless
     ```
 
-4. Download the 3 [`pretrained resnet`](https://cloud.dfki.de/owncloud/index.php/s/zT7z7c3e666mJTW), save them under `zebrapose/pretrained_backbone/resnet`, and download `pretrained efficientnet` from "https://download.pytorch.org/models/efficientnet_b4_rwightman-7eb33cd5.pth", save it under `zebrapose/pretrained_backbone/efficientnet`
+4. Download the 3 [`pretrained resnet`](https://huggingface.co/datasets/dfki-av/ZebraPoseGT), save them under `zebrapose/pretrained_backbone/resnet`, and download `pretrained efficientnet` from "https://download.pytorch.org/models/efficientnet_b4_rwightman-7eb33cd5.pth", save it under `zebrapose/pretrained_backbone/efficientnet`
 
 5. (Optional) Instead of download the ground truth, you can also generate them from scratch, details in [`Generate_GT.md`](Binary_Code_GT_Generator/Generate_GT.md). 
 
@@ -73,7 +73,7 @@ For datasets like tless, the number of a a specific object is unknown in the tes
 
 To use ICP for refinement, use `--use_icp True`
 
-Download our trained model from this [`link`](https://cloud.dfki.de/owncloud/index.php/s/EmQDWgd5ipbdw3E). The ProgressiveX can not set random seed in its python API. The ADD results can be +/- 0.5%.
+Download our trained model from this [`link`](https://huggingface.co/dfki-av/ZebraPose). The ProgressiveX can not set random seed in its python API. The ADD results can be +/- 0.5%.
 
 ## Evaluate for BOP challange 
 Merge the `.csv` files generated in the last step using `tools_for_BOP/merge_csv.py`, e.g.
